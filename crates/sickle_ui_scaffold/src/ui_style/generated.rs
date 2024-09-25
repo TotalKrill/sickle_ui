@@ -11,7 +11,7 @@ use super::{
         CustomInteractiveStyleAttribute, CustomStaticStyleAttribute, InteractiveVals,
     },
     builder::{AnimatedStyleBuilder, InteractiveStyleBuilder, StyleBuilder},
-    manual::{ImageSource, SetAbsolutePositionExt, SetFluxInteractionExt, SetImageExt},
+    manual::{FontSource, ImageSource, SetAbsolutePositionExt, SetFluxInteractionExt, SetImageExt},
     AnimatedVals, LockedStyleAttributes, LogicalEq, TrackedStyleState, UiStyle, UiStyleUnchecked,
 };
 
@@ -208,7 +208,7 @@ enum _StyleAttributes {
     #[skip_lockable_enum]
     #[skip_enity_command]
     Font {
-        font: String,
+        font: FontSource,
     },
     #[skip_lockable_enum]
     #[skip_enity_command]

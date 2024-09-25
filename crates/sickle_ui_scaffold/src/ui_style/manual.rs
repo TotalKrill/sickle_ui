@@ -609,10 +609,37 @@ impl EntityCommand for SetIcon {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum FontSource {
+    Path(String),
+    Handle(Handle<Font>),
+}
+
+impl Default for FontSource {
+    fn default() -> Self {
+        Self::Handle(Handle::default())
+    }
+}
+
+impl From<&str> for FontSource {
+    fn from(path: &str) -> Self {
+        Self::Path(path.to_string())
+    }
+}
+
+impl From<String> for FontSource {
+    fn from(path: String) -> Self {
+        Self::Path(path)
+    }
+}
+
 // TODO: Update these once font / text handling improves
 impl EntityCommand for SetFont {
     fn apply(self, entity: Entity, world: &mut World) {
-        let font = world.resource::<AssetServer>().load(self.font);
+        let font = match self.font {
+            FontSource::Path(path) => world.resource::<AssetServer>().load(path),
+            FontSource::Handle(handle) => handle,
+        };
 
         let Some(mut text) = world.get_mut::<Text>(entity) else {
             warn!(
