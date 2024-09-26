@@ -141,7 +141,7 @@ pub trait SetImageExt {
     fn image(&mut self, source: ImageSource) -> &mut Self;
 }
 
-impl SetImageExt for UiStyle<'_, ()> {
+impl<T> SetImageExt for UiStyle<'_, T> {
     fn image(&mut self, source: ImageSource) -> &mut Self {
         self.commands.add(SetImage {
             source,
@@ -284,7 +284,7 @@ pub trait SetFluxInteractionExt {
     fn flux_interaction_enabled(&mut self, enabled: bool) -> &mut Self;
 }
 
-impl SetFluxInteractionExt for UiStyle<'_, ()> {
+impl<T> SetFluxInteractionExt for UiStyle<'_, T> {
     fn disable_flux_interaction(&mut self) -> &mut Self {
         self.commands.add(SetFluxInteractionEnabled {
             enabled: false,
@@ -348,7 +348,7 @@ pub trait SetNodeShowHideExt {
     fn render(&mut self, render: bool) -> &mut Self;
 }
 
-impl SetNodeShowHideExt for UiStyle<'_, ()> {
+impl<T> SetNodeShowHideExt for UiStyle<'_, T> {
     fn show(&mut self) -> &mut Self {
         self.commands
             .add(SetVisibility {
@@ -520,7 +520,7 @@ pub trait SetAbsolutePositionExt {
     fn absolute_position(&mut self, position: Vec2) -> &mut Self;
 }
 
-impl SetAbsolutePositionExt for UiStyle<'_, ()> {
+impl<T> SetAbsolutePositionExt for UiStyle<'_, T> {
     fn absolute_position(&mut self, position: Vec2) -> &mut Self {
         self.commands.add(SetAbsolutePosition {
             absolute_position: position,
@@ -755,7 +755,7 @@ pub trait SetLockedAttributeExt {
     fn lock_attribute(&mut self, attribute: LockableStyleAttribute) -> &mut Self;
 }
 
-impl SetLockedAttributeExt for UiStyle<'_, ()> {
+impl<T> SetLockedAttributeExt for UiStyle<'_, T> {
     fn lock_attribute(&mut self, attribute: LockableStyleAttribute) -> &mut Self {
         self.commands.add(SetLockedAttribute {
             attribute,
