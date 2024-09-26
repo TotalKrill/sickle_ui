@@ -344,7 +344,7 @@ fn prepare_static_style_attribute(
         }
 
         impl StaticStyleAttribute {
-            pub fn apply(&self, ui_style: &mut UiStyle) {
+            pub fn apply(&self, ui_style: &mut UiStyle<()>) {
                 match self {
                     #(#apply_variants)*
                     Self::Custom(callback) => {
@@ -402,7 +402,7 @@ fn prepare_interactive_style_attribute(
                 }
             }
 
-            pub fn apply(&self, flux_interaction: FluxInteraction, ui_style: &mut UiStyle) {
+            pub fn apply(&self, flux_interaction: FluxInteraction, ui_style: &mut UiStyle<()>) {
                 match self {
                     Self::Custom(callback) => {
                         ui_style
@@ -471,7 +471,7 @@ fn prepare_animated_style_attribute(
             pub fn apply(
                 &self,
                 current_state: &AnimationState,
-                ui_style: &mut UiStyle,
+                ui_style: &mut UiStyle<()>,
             ) {
                 match self {
                     Self::Custom(callback) => {
@@ -762,7 +762,7 @@ fn to_ui_style_extensions(style_attribute: &StyleAttribute) -> proc_macro2::Toke
             fn #target_attr(&mut self, #target_attr: #target_type) -> &mut Self;
         }
 
-        impl #extension_ident for UiStyle<'_> {
+        impl #extension_ident for UiStyle<'_, ()> {
             fn #target_attr(&mut self, #target_attr: #target_type) -> &mut Self {
                 self.entity_commands().add(#cmd_struct_ident {
                     #target_attr,

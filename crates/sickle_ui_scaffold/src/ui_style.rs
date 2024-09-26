@@ -20,11 +20,12 @@ pub mod prelude {
     };
 }
 
-pub struct UiStyle<'a> {
+pub struct UiStyle<'a, T> {
     commands: EntityCommands<'a>,
+    _p: std::marker::PhantomData<T>,
 }
 
-impl UiStyle<'_> {
+impl<T> UiStyle<'_, T> {
     /// Returns the Entity that is the target of all styling commands
     pub fn id(&self) -> Entity {
         self.commands.id()
@@ -33,6 +34,15 @@ impl UiStyle<'_> {
     /// Returns the underlying EntityCommands via reborrow
     pub fn entity_commands(&mut self) -> EntityCommands {
         self.commands.reborrow()
+    }
+
+    /// Retypes the UiStyle so that style commands that should only be locked to a specific type
+    /// can be used
+    pub fn typed<N>(&mut self) -> UiStyle<'_, N> {
+        UiStyle {
+            commands: self.commands.reborrow(),
+            _p: std::marker::PhantomData,
+        }
     }
 }
 
@@ -47,7 +57,7 @@ pub trait UiStyleExt {
     ///     fn my_prop(&mut self, value: f32) -> &mut Self;
     /// }
     ///
-    /// impl SetMyPropExt for UiStyle<'_> {
+    /// impl<T> SetMyPropExt for UiStyle<'_, T> {
     ///     fn my_prop(&mut self, value: f32) -> &mut Self {
     ///         // SetMyProp is assumed to be an EntityCommand
     ///         // Alternatively a closure can be supplied as per a standard bevy command
@@ -59,13 +69,61 @@ pub trait UiStyleExt {
     ///     }
     /// }
     /// ```
-    fn style(&mut self, entity: Entity) -> UiStyle;
+    fn style(&mut self, entity: Entity) -> UiStyle<()>;
+
+    /// Styling commands for typed custom UI Nodes
+    ///
+    /// `sickle_ui` exposes functions for all standard bevy styleable attributes.
+    /// Manual extension can be done for custom styling needs via extension traits:
+    ///
+    /// ```rust
+    ///
+    /// // A component that wants to trigger effect somewhere else, when the correct method is invoked on
+    /// // a UiStyle that contains this type
+    /// #[derive(Component)]
+    /// pub struct PaintTargetRed{target: Entity};
+    ///
+    /// pub struct SetRed;
+    ///
+    /// impl EntityCommand for SetRed {
+    ///     fn apply(self, id: Entity, world: &mut world) {
+    ///    
+    ///         let Some(me) = world.get::<MyType>(id) else {
+    ///            panic!("Entity does not have this component!");
+    ///         };
+    ///         // here you can now do things, using the component values from MyType safely
+    ///         world.commands().style(me.child).image_tint(css::RED.into());
+    ///     }
+    /// }
+    ///
+    /// pub trait SetMyTypedPropExt {
+    ///     fn set_red(&mut self, value: f32) -> &mut Self;
+    /// }
+    ///
+    /// impl SetMyTypedPropExt for UiStyle<'_, PaintTargetRed> {
+    ///     fn set_red(&mut self, value: f32) -> &mut Self {
+    ///         // SetMyProp is assumed to be an EntityCommand
+    ///         // Alternatively a closure can be supplied as per a standard bevy command
+    ///         // NOTE: All built-in commands structs are public and can be re-used in extensions
+    ///         self.entity_commands().add(SetRed);
+    ///         self
+    ///     }
+    /// }
+    /// ```
+    fn style_typed<T>(&mut self, entity: Entity) -> UiStyle<T>;
 }
 
 impl UiStyleExt for Commands<'_, '_> {
-    fn style(&mut self, entity: Entity) -> UiStyle {
+    fn style(&mut self, entity: Entity) -> UiStyle<()> {
         UiStyle {
             commands: self.entity(entity),
+            _p: std::marker::PhantomData,
+        }
+    }
+    fn style_typed<T>(&mut self, entity: Entity) -> UiStyle<T> {
+        UiStyle {
+            commands: self.entity(entity),
+            _p: std::marker::PhantomData,
         }
     }
 }

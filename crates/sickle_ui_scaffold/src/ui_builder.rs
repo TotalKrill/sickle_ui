@@ -99,9 +99,14 @@ impl UiBuilder<'_, Entity> {
     ///     }
     /// }
     /// ```
-    pub fn style(&mut self) -> UiStyle {
+    pub fn style(&mut self) -> UiStyle<()> {
         let entity = self.id();
         self.commands().style(entity)
+    }
+    /// This allows for the creation of special style commands, for example if you have created a widget
+    pub fn style_typed<T>(&mut self) -> UiStyle<T> {
+        let entity = self.id();
+        self.commands().style_typed::<T>(entity)
     }
 
     /// Same as [`UiBuilder<'_, Entity>::style()`], except style commands bypass possible attribute locks.
