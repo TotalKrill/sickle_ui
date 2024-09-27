@@ -54,3 +54,4 @@ serde_json = "1.0.127"
 
 [dev-dependencies]
 bevy = { version = "*", default-features = false, features = ["bevy_gltf"] }
+extension-trait = "1.0"
