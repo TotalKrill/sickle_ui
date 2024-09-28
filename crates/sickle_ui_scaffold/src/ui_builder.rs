@@ -63,10 +63,29 @@ impl UiBuilder<'_, UiRoot> {
     }
 }
 
-impl UiBuilder<'_, Entity> {
+/// Trait to reduce duplication of code on UiBuilder Implementation through composition
+/// basically, as long as the type has a way of returning its own entity Id, all methods implemented on the
+/// UiBuilder becomes available
+pub trait UiBuilderGetId {
     /// The ID (Entity) of the current builder
+    fn get_id(&self) -> Entity;
+}
+
+impl UiBuilderGetId for Entity {
+    fn get_id(&self) -> Entity {
+        *self
+    }
+}
+
+impl<T> UiBuilderGetId for (Entity, T) {
+    fn get_id(&self) -> Entity {
+        self.0
+    }
+}
+
+impl<T: UiBuilderGetId> UiBuilder<'_, T> {
     pub fn id(&self) -> Entity {
-        *self.context()
+        self.context().get_id()
     }
 
     /// The `EntityCommands` of the builder
@@ -102,6 +121,13 @@ impl UiBuilder<'_, Entity> {
     pub fn style(&mut self) -> UiStyle {
         let entity = self.id();
         self.commands().style(entity)
+    }
+
+    pub fn style_inplace(&mut self, style_fn: impl FnOnce(&mut UiStyle)) -> &mut Self {
+        let entity = self.id();
+        let mut style = self.commands().style(entity);
+        style_fn(&mut style);
+        self
     }
 
     /// Same as [`UiBuilder<'_, Entity>::style()`], except style commands bypass possible attribute locks.
@@ -144,90 +170,11 @@ impl UiBuilder<'_, Entity> {
     }
 }
 
-/// Implementations that are very useful for creating nested widgets
+/// Implementations that are useful for creating nested widgets
 impl<T> UiBuilder<'_, (Entity, T)> {
-    /// The ID (Entity) of the current builder
-    pub fn id(&self) -> Entity {
-        self.context().0
-    }
-
     /// The extension content of the UiBuilder
     pub fn content(&self) -> &T {
         &self.context().1
-    }
-
-    /// The `EntityCommands` of the builder
-    ///
-    /// Poits to the entity currently being built upon (see [`UiBuilder<'_, Entity>::id()`]).
-    pub fn entity_commands(&mut self) -> EntityCommands {
-        let entity = self.id();
-        self.commands().entity(entity)
-    }
-
-    /// Styling commands for UI Nodes
-    ///
-    /// `sickle_ui` exposes functions for all standard bevy styleable attributes.
-    /// Manual extension can be done for custom styling needs via extension traits:
-    ///
-    /// ```rust
-    /// pub trait SetMyPropExt {
-    ///     fn my_prop(&mut self, value: f32) -> &mut Self;
-    /// }
-    ///
-    /// impl SetMyPropExt for UiStyle<'_> {
-    ///     fn my_prop(&mut self, value: f32) -> &mut Self {
-    ///         // SetMyProp is assumed to be an EntityCommand
-    ///         // Alternatively a closure can be supplied as per a standard bevy command
-    ///         // NOTE: All built-in commands structs are public and can be re-used in extensions
-    ///         self.entity_commands().add(SetMyProp {
-    ///             value
-    ///         });
-    ///         self
-    ///     }
-    /// }
-    /// ```
-    pub fn style(&mut self) -> UiStyle {
-        let entity = self.id();
-        self.commands().style(entity)
-    }
-
-    /// Same as [`UiBuilder<'_, Entity>::style()`], except style commands bypass possible attribute locks.
-    pub fn style_unchecked(&mut self) -> UiStyleUnchecked {
-        let entity = self.id();
-        self.commands().style_unchecked(entity)
-    }
-
-    /// Spawn a child node as a child of the current entity identified by [`UiBuilder<'_, Entity>::id()`]
-    pub fn spawn(&mut self, bundle: impl Bundle) -> UiBuilder<Entity> {
-        let mut new_entity = Entity::PLACEHOLDER;
-
-        let entity = self.id();
-        self.commands().entity(entity).with_children(|parent| {
-            new_entity = parent.spawn(bundle).id();
-        });
-
-        self.commands().ui_builder(new_entity)
-    }
-
-    /// Inserts a [`Bundle`] of components to the current entity (identified by [`UiBuilder<'_, Entity>::id()`])
-    pub fn insert(&mut self, bundle: impl Bundle) -> &mut Self {
-        self.entity_commands().insert(bundle);
-        self
-    }
-
-    /// Insert a [`Name`] component to the current entity (identified by [`UiBuilder<'_, Entity>::id()`])
-    pub fn named(&mut self, name: impl Into<String>) -> &mut Self {
-        self.entity_commands().named(name);
-        self
-    }
-
-    /// Mount an observer to the current entity (identified by [`UiBuilder<'_, Entity>::id()`])
-    pub fn observe<E: Event, B: Bundle, M>(
-        &mut self,
-        system: impl IntoObserverSystem<E, B, M>,
-    ) -> &mut Self {
-        self.entity_commands().observe(system);
-        self
     }
 }
 
@@ -240,6 +187,15 @@ impl UiBuilderExt for Commands<'_, '_> {
     fn ui_builder<T>(&mut self, context: T) -> UiBuilder<T> {
         UiBuilder {
             commands: self.reborrow(),
+            context,
+        }
+    }
+}
+
+impl UiBuilderExt for EntityCommands<'_> {
+    fn ui_builder<T>(&mut self, context: T) -> UiBuilder<T> {
+        UiBuilder {
+            commands: self.commands(),
             context,
         }
     }
