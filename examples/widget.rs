@@ -187,8 +187,10 @@ fn modify_labels(
                             Srgba::rgb_u8(*frames as _, *frames as _, *frames as _).into(),
                         );
                     })
-                    .entity_commands()
-                    .set_text(format!("Duration: {}", time.elapsed_seconds()), None);
+                    // this keeps context after applying any entitycommands code
+                    .entity_commands_inplace(|ec| {
+                        ec.set_text(format!("Duration: {}", time.elapsed_seconds()), None);
+                    });
             });
         });
 }

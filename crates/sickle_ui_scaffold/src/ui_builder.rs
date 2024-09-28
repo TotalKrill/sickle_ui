@@ -96,6 +96,17 @@ impl<T: UiBuilderGetId> UiBuilder<'_, T> {
         self.commands().entity(entity)
     }
 
+    /// This allows for using the `EntityCommands` of the builder, and also returning the UiBuilder with context
+    /// intact for further processing
+    pub fn entity_commands_inplace(
+        &mut self,
+        entity_commands_fn: impl FnOnce(&mut EntityCommands),
+    ) -> &mut Self {
+        let mut ec = self.entity_commands();
+        entity_commands_fn(&mut ec);
+        self
+    }
+
     /// Styling commands for UI Nodes
     ///
     /// `sickle_ui` exposes functions for all standard bevy styleable attributes.
