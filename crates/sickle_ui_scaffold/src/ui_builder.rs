@@ -175,7 +175,7 @@ impl<T: UiBuilderGetId> UiBuilder<'_, T> {
 /// Implementations that are useful for creating nested widgets
 impl<T> UiBuilder<'_, (Entity, T)> {
     /// The extension content of the UiBuilder
-    pub fn content(&self) -> &T {
+    pub fn context_data(&self) -> &T {
         &self.context().1
     }
 }

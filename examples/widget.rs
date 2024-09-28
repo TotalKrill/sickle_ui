@@ -64,7 +64,7 @@ mod titlelabel_widget {
     pub impl TitledLabelSubExt for UiBuilder<'_, (Entity, &TitleLabel)> {
         // access the different subwidgets here
         fn value(&mut self, builder: impl FnOnce(&mut UiBuilder<'_, Entity>)) -> &mut Self {
-            let e = self.content().label;
+            let e = self.context_data().label;
             let mut vb = self.commands().ui_builder(e);
             builder(&mut vb);
             self
@@ -72,7 +72,7 @@ mod titlelabel_widget {
 
         // access the different subwidgets here
         fn title(&mut self, builder: impl FnOnce(&mut UiBuilder<'_, Entity>)) -> &mut Self {
-            let e = self.content().title;
+            let e = self.context_data().title;
             let mut vb = self.commands().ui_builder(e);
             builder(&mut vb);
             self
