@@ -123,6 +123,8 @@ impl<T: UiBuilderGetId> UiBuilder<'_, T> {
         self.commands().style(entity)
     }
 
+    /// This allows for modification of style, and also returning the UiBuilder with context
+    /// intact for further processing
     pub fn style_inplace(&mut self, style_fn: impl FnOnce(&mut UiStyle)) -> &mut Self {
         let entity = self.id();
         let mut style = self.commands().style(entity);
